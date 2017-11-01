@@ -1,0 +1,462 @@
+libname study "/folders/myfolders/Linear Regression Case";
+
+proc import datafile="/folders/myfolders/Linear Regression Case/Linear Regression Case.xlsx"
+out=study.mydata dbms=xlsx replace;
+run;
+
+proc univariate data=study.mydata;
+var cardspent;
+run;
+
+/* Data set creation with dependent variablel */
+
+data study.mydata;
+set study.mydata;
+total_spent= cardspent + card2spent;
+Total_fee = cardfee + card2fee;
+Total_items=carditems + card2items;
+run;
+
+proc univariate data=study.mydata;
+var total_spent;
+histogram ;
+run;
+
+
+data study.mydata;
+set study.mydata;
+total_spent= cardspent + card2spent;
+Total_fee = cardfee + card2fee;
+Total_items=carditems + card2items;
+ln_spent = log(total_spent);
+run;
+
+
+proc univariate data=study.mydata;
+var ln_spent;
+histogram ;
+run;
+
+
+/* running discriptive statistics  */
+
+proc means data=study.mydata N Nmiss mean std min P1 P5 P10 P25 P50 P75 P90 P95 P99 max ;
+run;
+
+/**** Outlier Capping / missing value treatment****/
+
+data study.mydata;
+set study.mydata;
+ IF  townsize = " " then  townsize =2.6872749;
+ IF  lncreddebt = .  then  lncreddebt =-0.1304535;
+ IF  lnothdebt =  .  then  lnothdebt =0.6969153;
+ IF  commutetime =  .  then  commutetime =25.3455382;
+ IF  longten =  .  then  longten =708.8717531;
+ IF  lnlongten =  .  then  lnlongten =5.6112979;
+if region >7.2666809 then region=7.2666809;
+if townsize >6.9650499 then townsize =6.9650499;
+if agecat >8.1651538 then  agecat =8.1651538;
+if edcat >6.3072149 Then  edcat =6.3072149;
+if jobcat >7.9664997 Then jobcat =7.9664997;
+if employ >38.8031861 Then employ =38.8031861;
+if empcat >7.2924988 Then  empcat =7.2924988;
+if inccat >6.0559818 Then inccat =6.0559818;
+if jobsat >7.102568 Then  jobsat =7.102568;
+if marital >1.9791734 Then marital =1.9791734;
+if carcatvalue >4.6332886 Then carcatvalue =4.6332886;
+if commute >11.226754 Then  commute =11.226754;
+if reason >16.1868054 Then reason =16.1868054;
+if card >6.2689141 Then card =6.2689141;
+if cardbenefit >5.8575077 Then cardbenefit =5.8575077;
+if cardfee >1.366346 Then cardfee =1.366346;
+if card2 >6.2947437 Then card2 =6.2947437;
+if card2benefit >5.8858118 Then card2benefit =5.8858118;
+if card2fee >1.357533 Then card2fee =1.357533;
+if active >1.9626778 Then active =1.9626778;
+if tenure >106.190464 Then tenure =106.190464;
+if ebill >1.7783241 Then ebill =1.7783241 ;
+if response_01 >0.9140441 Then response_01 =0.9140441;
+if response_02 >1.1381507 Then response_02 =1.1381507;
+if response_03 >1.0129983 Then response_03 =1.0129983 ;
+if ed >24.3862484 Then ed =24.3862484;	
+if income >220.8921336 Then	 income =220.8921336;
+if lninc >5.9411251 Then	lninc =5.9411251;
+if debtinc >29.1535099 Then	debtinc =29.1535099;
+if creddebt >12.1045216 Then creddebt =12.1045216;	
+if lncreddebt >3.6887217 Then lncreddebt =3.6887217 ;	
+if othdebt >19.839975 Then othdebt =19.839975;	
+if lnothdebt >4.0826499 Then lnothdebt =4.0826499;	
+if carvalue >86.9274901 Then carvalue =86.9274901;	
+if total_spent >1552.6664403 Then	total_spent =1552.6664403; 
+if Total_items >28.0420686 Then Total_items =28.0420686;	
+if lncreddebt <-3.9496287 Then lncreddebt =-3.9496287;
+if lnothdebt <-2.6888193 Then lnothdebt =-2.6888193;
+if carvalue <-40.4623301 Then carvalue =-40.4623301; 
+run;
+
+
+/* just to cross check running discriptive statistics  */
+
+proc means data=study.mydata N Nmiss mean std min P1 P5 P10 P25 P50 P75 P90 P95 P99 max ;
+run;
+
+   /*  Correlation matrix */
+
+proc corr data=study.mydata;
+var age
+ed
+income
+lninc
+debtinc
+creddebt
+lncreddebt
+othdebt
+lnothdebt
+spoused
+reside
+pets
+pets_cats
+pets_dogs
+pets_birds
+pets_reptiles
+pets_small
+pets_saltfish
+pets_freshfish
+carvalue
+commutetime
+carditems
+cardspent
+card2items
+card2spent
+longmon
+lnlongmon
+longten
+lnlongten
+tollfree
+tollmon
+tollten
+lntollten
+equipmon
+equipten
+cardmon
+cardten
+wiremon
+wireten
+hourstv
+total_spent
+Total_fee
+Total_items;
+run;
+
+/* Factor Analysis */
+
+proc factor data=study.mydata method=principal mineigen=0 
+maxiter=100 nfactors=13 scree rotate=varimax  reorder;
+var 
+edcat	jobcat	employ		
+empcat	inccat	jobsat		
+marital	carcatvalue	commute		
+reason	card	cardbenefit		
+cardfee	card2	card2benefit		
+card2fee	active	tenure	ebill	
+response_01	response_02	response_03	ed	income
+lninc	debtinc	creddebt	lncreddebt	othdebt
+lnothdebt	carvalue	total_spent	Total_items	;
+run;  
+
+/* Dummy Var creation, Dummy variable creation for Catagorical Variables */
+
+data study.mydata;
+set study.mydata;
+
+if region= 1 then dummy_region1 = 1; else dummy_region1 = 0;
+if region= 2 then dummy_region2 = 1; else dummy_region2 = 0;
+if region= 3 then dummy_region3 = 1; else dummy_region3 = 0;
+if region= 4 then dummy_region4 = 1; else dummy_region4 = 0;
+if region= 5 then dummy_region5 = 1; else dummy_region5 = 0;
+
+if carcatvalue= 1 then dummy_carcatvalue1 = 1; else dummy_carcatvalue1 = 0;
+if carcatvalue= 2 then dummy_carcatvalue2 = 1; else dummy_carcatvalue2 = 0;
+if carcatvalue= 3 then dummy_carcatvalue3 = 1; else dummy_carcatvalue3 = 0;
+
+if empcat= 1 then dummy_empcat1 = 1; else dummy_empcat1 = 0;
+if empcat= 2 then dummy_empcat2 = 1; else dummy_empcat2 = 0;
+if empcat= 3 then dummy_empcat3 = 1; else dummy_empcat3 = 0;
+if empcat= 4 then dummy_empcat4 = 1; else dummy_empcat4 = 0;
+if empcat= 5 then dummy_empcat5 = 1; else dummy_empcat5 = 0;
+
+if jobsat= 1 then dummy_jobsat1 = 1; else dummy_jobsat1 = 0;
+if jobsat= 2 then dummy_jobsat2 = 1; else dummy_jobsat2 = 0;
+if jobsat= 3 then dummy_jobsat3 = 1; else dummy_jobsat3 = 0;
+if jobsat= 4 then dummy_jobsat4 = 1; else dummy_jobsat4 = 0;
+if jobsat= 5 then dummy_jobsat5 = 1; else dummy_jobsat5 = 0;
+
+if edcat= 1 then dummy_edcat1 = 1; else dummy_edcat1 = 0;
+if edcat= 2 then dummy_edcat2 = 1; else dummy_edcat2 = 0;
+if edcat= 3 then dummy_edcat3 = 1; else dummy_edcat3 = 0;
+if edcat= 4 then dummy_edcat4 = 1; else dummy_edcat4 = 0;
+if edcat= 5 then dummy_edcat5 = 1; else dummy_edcat5 = 0;
+
+if inccat= 1 then dummy_inccat1 = 1; else dummy_inccat1 = 0;
+if inccat= 2 then dummy_inccat2 = 1; else dummy_inccat2 = 0;
+if inccat= 3 then dummy_inccat3 = 1; else dummy_inccat3 = 0;
+if inccat= 4 then dummy_inccat4 = 1; else dummy_inccat4 = 0;
+if inccat= 5 then dummy_inccat5 = 1; else dummy_inccat5 = 0;
+
+if commute= 1 then dummy_commute1 = 1; else dummy_commute1 = 0;
+if commute= 2 then dummy_commute2 = 1; else dummy_commute2 = 0;
+if commute= 3 then dummy_commute3 = 1; else dummy_commute3 = 0;
+if commute= 4 then dummy_commute4 = 1; else dummy_commute4 = 0;
+if commute= 5 then dummy_commute5 = 1; else dummy_commute5 = 0;
+if commute= 6 then dummy_commute6 = 1; else dummy_commute6 = 0;
+if commute= 7 then dummy_commute7 = 1; else dummy_commute7 = 0;
+if commute= 8 then dummy_commute8 = 1; else dummy_commute8 = 0;
+if commute= 9 then dummy_commute9 = 1; else dummy_commute9 = 0;
+if commute= 10 then dummy_commute10 = 1; else dummy_commute10 = 0;
+
+if reason= 1 then dummy_reason1 = 1; else dummy_reason1 = 0;
+if reason= 2 then dummy_reason2 = 1; else dummy_reason2 = 0;
+if reason= 3 then dummy_reason3 = 1; else dummy_reason3 = 0;
+if reason= 4 then dummy_reason4 = 1; else dummy_reason4 = 0;
+if reason= 8 then dummy_reason8 = 1; else dummy_reason8 = 0;
+if reason= 9 then dummy_reason9 = 1; else dummy_reason9 = 0;
+
+if card2benefit= 1 then dummy_card2benefit1 = 1; else dummy_card2benefit1 = 0;
+if card2benefit= 2 then dummy_card2benefit2 = 1; else dummy_card2benefit2 = 0;
+if card2benefit= 3 then dummy_card2benefit3 = 1; else dummy_card2benefit3 = 0;
+if card2benefit= 4 then dummy_card2benefit4 = 1; else dummy_card2benefit4 = 0;
+
+if cardbenefit= 1 then dummy_cardbenefit1 = 1; else dummy_cardbenefit1 = 0;
+if cardbenefit= 2 then dummy_cardbenefit2 = 1; else dummy_cardbenefit2 = 0;
+if cardbenefit= 3 then dummy_cardbenefit3 = 1; else dummy_cardbenefit3 = 0;
+if cardbenefit= 4 then dummy_cardbenefit4 = 1; else dummy_cardbenefit4 = 0;
+
+if active= 0 then dummy_active0 = 1; else dummy_active0 = 0;
+if active= 1 then dummy_active1 = 1; else dummy_active1 = 0;
+
+if response_02= 0 then dummy_response_02 = 1; else dummy_response_02 = 0;
+if response_02= 1 then dummy_response_02_1 = 1; else dummy_response_02_1 = 0;
+
+if marital= 0 then dummy_marital = 1; else dummy_marital = 0;
+if marital= 1 then dummy_marital_1 = 1; else dummy_marital = 0;
+
+if response_03= 0 then dummy_response_03 = 1; else dummy_response_03 = 0;
+if response_03= 1 then dummy_response_03_1 = 1; else dummy_response_03_1 = 0;
+run;
+
+data study.mydata;
+set study.mydata;
+drop response_03_1 response_02_1 lntollmon lntollten lnequipmon lnequipten lncardmon  lncardten lnwiremon lnwireten;
+run;
+
+/* training & validation Data set  creation */
+
+data study.dev study.val;
+set study.mydata;
+if ranuni(1000)<0.7 then output study.dev;
+else output study.val;
+run;
+
+/* Running the linear regression */
+
+proc reg data=study.dev;
+model ln_spent = 
+income
+debtinc
+lninc
+creddebt
+lnothdebt
+Total_items
+tenure
+employ
+dummy_carcatvalue1
+dummy_carcatvalue2
+dummy_carcatvalue3
+dummy_empcat1
+dummy_empcat2
+dummy_empcat3
+dummy_empcat4
+dummy_empcat5
+dummy_jobsat1
+dummy_jobsat2
+dummy_jobsat3
+dummy_jobsat4
+dummy_jobsat5
+dummy_edcat1
+dummy_edcat2
+dummy_edcat3
+dummy_edcat4
+dummy_edcat5
+dummy_commute1
+dummy_commute2
+dummy_commute3
+dummy_commute4
+dummy_commute5
+dummy_commute6
+dummy_commute7
+dummy_commute8
+dummy_commute9
+dummy_commute10
+dummy_reason1
+dummy_reason2
+dummy_reason3
+dummy_reason4
+dummy_reason8
+dummy_reason9
+dummy_card2benefit1
+dummy_card2benefit2
+dummy_card2benefit3
+dummy_card2benefit4
+dummy_cardbenefit1
+dummy_cardbenefit2
+dummy_cardbenefit3
+dummy_cardbenefit4
+dummy_active0
+dummy_active1
+dummy_response_02
+dummy_response_02_1
+dummy_marital
+dummy_marital_1
+dummy_region1
+dummy_region2
+dummy_region3
+dummy_region4
+dummy_region5
+dummy_response_03
+dummy_response_03_1
+dummy_inccat1
+/selection = stepwise slentry= 0.05 slstay=0.1 vif stb;
+run;
+
+/* Itteration 2 */
+
+proc reg data=study.dev;
+model ln_spent = 
+income
+debtinc
+lninc
+creddebt
+lnothdebt
+Total_items
+tenure
+employ
+dummy_carcatvalue1
+dummy_carcatvalue2
+dummy_carcatvalue3
+dummy_empcat1
+dummy_empcat2
+dummy_empcat3
+dummy_empcat4
+dummy_empcat5
+dummy_jobsat1
+dummy_jobsat2
+dummy_jobsat3
+dummy_jobsat4
+dummy_jobsat5
+dummy_edcat1
+dummy_edcat2
+dummy_edcat3
+dummy_edcat4
+dummy_edcat5
+dummy_commute1
+dummy_commute2
+dummy_commute3
+dummy_commute4
+dummy_commute5
+dummy_commute6
+dummy_commute7
+dummy_commute8
+dummy_commute9
+dummy_commute10
+dummy_reason1
+dummy_reason2
+dummy_reason3
+dummy_reason4
+dummy_reason8
+dummy_reason9
+dummy_card2benefit1
+dummy_card2benefit2
+dummy_card2benefit3
+dummy_card2benefit4
+dummy_cardbenefit1
+dummy_cardbenefit2
+dummy_cardbenefit3
+dummy_cardbenefit4
+dummy_active0
+dummy_active1
+dummy_response_02
+dummy_response_02_1
+dummy_marital
+dummy_marital_1
+dummy_region1
+dummy_region2
+dummy_region3
+dummy_region4
+dummy_region5
+dummy_response_03
+dummy_response_03_1
+dummy_inccat1
+dummy_inccat2
+dummy_inccat3
+dummy_inccat4
+dummy_inccat5
+/selection = stepwise slentry= 0.05 slstay=0.5 vif stb;
+run;
+
+
+/ ** Regression Eq2 ANALYSIS **/
+
+data study.dev;
+set study.dev;
+Y = 3.31601 +  0.33375*lninc + 0.09215*Total_items -0.00094172*tenure -0.34152*dummy_commute9 
++ 0.37066*dummy_reason2 + 0.13095*dummy_reason9;
+predict= exp(y);
+run;
+
+data study.val;
+set study.val;
+Y = 3.31601 +  0.33375*lninc + 0.09215*Total_items -0.00094172*tenure -0.34152*dummy_commute9 
++ 0.37066*dummy_reason2 + 0.13095*dummy_reason9;
+predict= exp(y);
+run;
+
+/ * Deciling the dev and val table */
+
+proc rank data=study.dev out=study.dev descending groups=10;
+var predict;
+ranks decvalue;
+run;
+
+data study.dev;
+set study.dev;
+decvalue = decvalue+1;
+run;
+
+proc rank data=study.val out=study.val descending groups=10;
+var predict;
+ranks decvalue;
+run;
+
+data study.val;
+set study.val;
+decvalue = decvalue+1;
+run;
+
+/* Rank ordering */
+
+proc sql;
+select decvalue, count(predict) as observations, avg(predict) as avg_predicted_spend,
+ avg(total_spent) as avg_totalspent
+ from study.dev
+ group by decvalue
+ order by decvalue desc;
+
+select decvalue,count(predict) as observations, avg(predict) as avg_predicted_spend,
+ avg(total_spent) as avg_totalspent
+ from study.val
+ group by decvalue
+ order by decvalue desc;
+quit;
+
+
+/**********************/
